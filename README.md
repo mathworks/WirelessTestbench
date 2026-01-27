@@ -26,18 +26,15 @@ This block is central to all models in this project and is used to validate whet
 This model introduces the data streaming pattern as a receiver of the Radio Interface Simulator block. In this example:
 
 - The Radio Interface Simulator acts as a **receiver**, sending data to spectrum analyzer.
-- The data are streaming from radio interface in chunks
+- The data is streamed from the radio interface in chunks or packets.
 - Respect the valid signal is important to get correct input data from radio.
 - You can configure the **device type** and **sample rate** directly from the block parameters.
 - Different settings will affect the **duty cycle** of the incoming data stream.
 
 This model is ideal for getting started with the Radio Interface Simulator and understanding how device and sample rate settings impact data flow pattern. The model is shown below:
 
-![image info](images/CRModel.png){width=70%}
+![image info](images/CRModel.png)
 
-The system diagram of DUT receiver is shown below:
-
-![image info](images/RXSD.png){width=70%}
 
 #### Instructions
 In this model, the Radio Interface Simulator streams data to two different spectrum analyzers. The top analyzer respects the valid signal, meaning it is only enabled when the valid signal is high. The bottom analyzer ignores the valid signal and remains enabled throughout the simulation. The Radio Interface Simulator is configured to transmit a tone signal.
@@ -46,25 +43,31 @@ Run the model and open the spectrum analyzers to compare the results.
 
 The output from the top spectrum analyzer displays a clean and well-defined spectrum of the tone signal, which aligns closely with the expected results from the receiver.
 
-![image info](images/GoodSpectrum.png){width=40%}
+![image info](images/GoodSpectrum.png)
 
 However, the output from the bottom spectrum analyzer reveals a spectrum with significant noise. This is because the valid signal is not honored, allowing invalid data to be included in the analysis. As a result, the spectrum appears distorted and does not accurately represent the tone signal.
 
-![image info](images/BadSpectrum.png){width=40%}
+![image info](images/BadSpectrum.png)
 
 Open the scope to view the data streaming pattern
 
-![image info](images/DataChunks.png){width=40%}
+![image info](images/DataChunks.png)
 
 The data are streaming to DUT as data chunks. Lower the sample rate, lwer the duty cycle between each chunk of data. However, in each data chunk, the data rate keeps same as the MCR(Master Clock Rate)
 
 - Change the sample rate to 61.44MHz.
 - Run the model and observe that the othe duty cycle change
 
+#### Real interaction with HW from MATLAB
+Once you generate a bitstream for a DUT receiver block similar to the one shown above by using the [Targeting Workflow](https://mathworks.com/help/wireless-testbench/target-ni-usrp-devices.html), you can interact with it from MATLAB by using the [usrp object](https://mathworks.com/help/wireless-testbench/ref/usrp-system-object.html) as follow:
+
+![image info](images/RXSD.png)
+
+
 ### 2. `BurstRxModel.slx`
 This model demonstrates how to receive a burst signal from a radio over a specific number of samples. The signal is received at the Master Clock Rate (MCR) and passed to a burst FFT block, which does not support continuous streaming. By adjusting the number of samples in the received signal, overflow into the burst FFT can be avoided, ensuring accurate processing of the burst data.
 
-![image info](images/BRModel.png){width=70%}
+![image info](images/BRModel.png)
 
 #### Instructions
 - Open  model
@@ -79,7 +82,7 @@ This model demonstrates how to receive a burst signal from a radio over a specif
 - In real design, you need to check the status of the burst FFT and decide whether to run *hDevice(1024)* to stream data to burst by yourself
 - Obvserve the overlfow is elimiated.
 
-### 3. `ContinunousTXModel.slx`
+### 3. `ContinuousTXModel.slx`
 
 This model demonstrates how a **radio buffer** can be used to compensate for pipeline delays in a transmitter. It includes two subsystems:
 
@@ -88,17 +91,21 @@ This model demonstrates how a **radio buffer** can be used to compensate for pip
 
 By toggling between these two subsystems, users can observe the impact of buffering on protocol compliance.The model is shown below:
 
-![image info](images/TXModel.png){width=70%}
+![image info](images/TXModel.png)
 
-The system diagram of DUT trasnmitter is shown below:
-
-![image info](images/TXSD_cont.png){width=70%}
 
 #### Instructions
 In this model, an NCO (Numerically Controlled Oscillator) is connected to a Radio Interface Simulator to simulate a tone signal transmitter. If the NCO is directly connected to the radio, which requires valid and ready signals to comply with the AXI-Stream protocol, the connection will fail. This is because the NCO introduces a 6-clock-cycle delay between receiving a valid input signal and producing an output. To maintain proper AXI-Stream handshaking, users must implement a buffer to compensate for this delay and ensure the protocol is respected.
 - Open model
 - Select the switch to direct connect and run simulation. Observe the overflow and underflow happens
 - Select the switch to connect with buffer and run simulation. Observe the overflow and underflow are elimiated since the implementaion of radio buffer.
+
+#### Real interaction with HW from MATLAB
+Once you generate a bitstream for a DUT transmitter block similar to the one shown above by using the [Targeting Workflow](https://mathworks.com/help/wireless-testbench/target-ni-usrp-devices.html), you can interact with it from MATLAB by using the [usrp object](https://mathworks.com/help/wireless-testbench/ref/usrp-system-object.html) as follow:
+
+![image info](images/TXSD_cont.png)
+
+
 
 ### 4. `SimulateWithCustomClock.slx`
 
@@ -108,7 +115,7 @@ This model demonstrates how to simulate your DUT with a **custom clock rate** us
 - Evaluate how timing mismatches and jitter affect data communication and protocol compliance.
 
 This setup is useful for testing DUT robustness under non-ideal clocking conditions.
-![image info](images/CustomClockModel.png){width=70%}
+![image info](images/CustomClockModel.png)
 
 #### Instructions
 In this model, the radio interface is configured as a receiver at custom clock rate to receive signal at a sample rate of 30.72MHz. The duty cycle of the DUT is 1/2. If the custom clock and radio clock clock are perfectly synchronized in theory, the system will be free from overflow, since:
